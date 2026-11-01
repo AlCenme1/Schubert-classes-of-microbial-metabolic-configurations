@@ -1,0 +1,9 @@
+# large or regenerable files
+community17_v2_curated.xml
+community12_curated.xml
+*.pkl
+!curacion_v2/curar_indiv2_res.pkl
+indiv/
+*.log
+__pycache__/
+.ipynb_checkpoints/

@@ -1,0 +1,11 @@
+cobra>=0.29
+optlang>=1.8
+highspy>=1.7
+numpy>=1.26
+pandas>=2.0
+scipy>=1.11
+statsmodels>=0.14
+ripser>=0.6
+persim>=0.3
+matplotlib>=3.8
+jupyter

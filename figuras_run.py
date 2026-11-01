@@ -57,7 +57,7 @@ r0 = det[det.variante == "original"].rho.iloc[0]
 b.axvline(r0, color=fr.INK, lw=1.1, label="observed")
 b.set_xlabel(r"$\rho_S$ (mean $\nu$ vs NaCl tolerance)")
 b.set_ylabel("References")
-b.legend(loc="upper right", fontsize=5.6)
+b.legend(loc="upper left", fontsize=5.6, framealpha=0.9)
 fr.panel_label(b, "B", dy=4)
 c.hist(det[det.variante == "aleatoria"].tau, bins=bins, color="#cfcfca", edgecolor="white",
        linewidth=0.6)

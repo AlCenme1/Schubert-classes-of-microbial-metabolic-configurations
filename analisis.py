@@ -14,8 +14,12 @@ F = {e: Z[e]["F"] for e in Z}
 cols = list(Z["SS19"]["cols"])
 
 # tex map (Table 5 definition) from the same raw fluxes
-mapa_tex = pickle.load(open("mapa_tex.pkl", "rb"))
-F_tex = {e: ps.recalcular_F(Z[e]["V"], cols, mapa_tex) for e in Z}
+import os
+EPS = 0.02          # > coupling slack u = 0.01
+HAY_TEX = os.path.exists("mapa_tex.pkl")
+if HAY_TEX:
+    mapa_tex = pickle.load(open("mapa_tex.pkl", "rb"))
+    F_tex = {e: ps.recalcular_F(Z[e]["V"], cols, mapa_tex) for e in Z}
 
 # ---- tolerance (values used in the previous version; see manuscript Table 3)
 tol = pd.DataFrame([
@@ -28,8 +32,8 @@ tol["tolerancia"] = tol["max"] - tol["min"]
 tol.to_csv("tolerancia.csv", index=False)
 
 res = {}
-for etiqueta, mp, FF in (("todas", mapa, F), ("tex", mapa_tex, F_tex)):
-    mu = ps.tabla_muestras(mp, FF, eps=1e-6, guardar="%s/muestras_%s.csv" % (OUT, etiqueta))
+for etiqueta, mp, FF in [("todas", mapa, F)] + ([("tex", mapa_tex, F_tex)] if HAY_TEX else []):
+    mu = ps.tabla_muestras(mp, FF, eps=EPS, guardar="%s/muestras_%s.csv" % (OUT, etiqueta))
     esp, corr = p1.analizar(mu, tol, mp.m, "%s/paso1_%s" % (OUT, etiqueta), n_mc=200000)
     res[etiqueta] = dict(esp=esp, corr=corr)
     print("\n=== interface:", etiqueta, "===")
@@ -45,12 +49,12 @@ sd_null = np.sqrt(mrect * (mapa.m + 1) / 12)
 print("fraction of states outside +-2SD random band:",
       round(float((np.abs(mu.codim - mu_null) > 2 * sd_null).mean()), 3))
 
-sens, det = ps.sensibilidad_bandera(mapa, F, tol, B=1000, eps=1e-6,
+sens, det = ps.sensibilidad_bandera(mapa, F, tol, B=1000, eps=EPS,
                                     guardar="%s/sensibilidad_bandera_det.csv" % OUT)
 sens.to_csv("%s/sensibilidad_bandera.csv" % OUT, index=False)
 print("\nflag sensitivity\n", sens.round(3).to_string())
 
-eps = ps.barrido_epsilon(mapa, F)
+eps = ps.barrido_epsilon(mapa, F, eps_lista=(0.02, 0.05, 0.1, 0.5, 1, 10))
 eps.to_csv("%s/barrido_epsilon.csv" % OUT, index=False)
 print("\nmax |change nu| over eps:", round(eps.cambio_nu.abs().max(), 4))
 
@@ -70,6 +74,6 @@ for c in ("persistencia_H0", "persistencia_H1"):
           " vs nu:", p1.spearman_perm(ph[c], ph["nu"]))
 
 json.dump({"m": mapa.m, "dims_todas": ps.dimensiones_bandera(mapa),
-           "dims_tex": ps.dimensiones_bandera(mapa_tex)},
+           "dims_tex": ps.dimensiones_bandera(mapa_tex) if HAY_TEX else None},
           open("%s/meta.json" % OUT, "w"), indent=1)
 print("DONE ANALISIS")

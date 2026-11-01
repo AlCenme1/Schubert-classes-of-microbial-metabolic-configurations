@@ -726,6 +726,13 @@ M9_GLICEROL = {c: -1000.0 for c in
                ["ca2", "cl", "co2", "cobalt2", "cu2", "fe2", "fe3", "h", "h2o", "k",
                 "mg2", "mn2", "mobd", "na1", "nh4", "ni2", "o2", "pi", "so4", "zn2"]}
 M9_GLICEROL["glyc"] = -10.0
+# iron is a trace nutrient, not an electron donor: ~200x the biomass requirement
+M9_GLICEROL["fe2"] = -1.0
+M9_GLICEROL["fe3"] = -1.0
+# traces of lysis-derived organic matter required by iSRU780 (no asparagine
+# synthetase, no terminal siroheme steps); no other taxon can export them
+M9_GLICEROL["asn__L"] = -0.1
+M9_GLICEROL["sheme"] = -0.1
 
 
 def aplicar_medio(model, medio=None, prefijo="EX_", sufijo="_e", verbose=True):
@@ -746,3 +753,15 @@ def aplicar_medio(model, medio=None, prefijo="EX_", sufijo="_e", verbose=True):
         _log("medium applied: %d compounds open%s"
              % (len(medio) - len(faltan), "; missing: %s" % faltan if faltan else ""))
     return faltan
+
+
+def preparar_modelo(ruta_sbml, solver="hybrid", medio=None, acoplar=True, c=400.0, u=0.01):
+    """Load the curated community model, apply the medium and (optionally) the
+    coupling constraints of curar_modelo.acoplar(). Returns (model, mapa)."""
+    model = cargar_modelo(ruta_sbml, solver=solver)
+    aplicar_medio(model, medio)
+    mapa = construir_mapa(model)
+    if acoplar:
+        import curar_modelo as cm
+        cm.acoplar(model, c=c, u=u, mapa=mapa)
+    return model, mapa
